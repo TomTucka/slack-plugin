@@ -17,13 +17,15 @@ public class SlackSendStepIntegrationTest {
 
     @Test
     public void configRoundTrip() throws Exception {
-        SlackSendStep step1 = new SlackSendStep("message");
+        SlackSendStep step1 = new SlackSendStep();
+        step1.setMessage("message");
         step1.setColor("good");
         step1.setChannel("#channel");
-        step1.setToken("token");
-        step1.setTokenCredentialId("tokenCredentialId");
         step1.setTeamDomain("teamDomain");
+        step1.setBaseUrl("baseUrl");
         step1.setFailOnError(true);
+        step1.setIconEmoji(":+1:");
+        step1.setUsername("username");
 
         SlackSendStep step2 = new StepConfigTester(jenkinsRule).configRoundTrip(step1);
         jenkinsRule.assertEqualDataBoundBeans(step1, step2);
@@ -33,19 +35,19 @@ public class SlackSendStepIntegrationTest {
     public void test_global_config_override() throws Exception {
         WorkflowJob job = jenkinsRule.jenkins.createProject(WorkflowJob.class, "workflow");
         //just define message
-        job.setDefinition(new CpsFlowDefinition("slackSend(message: 'message', teamDomain: 'teamDomain', token: 'token', tokenCredentialId: 'tokenCredentialId', channel: '#channel', color: 'good');", true));
+        job.setDefinition(new CpsFlowDefinition("slackSend(message: 'message', baseUrl: 'baseUrl', teamDomain: 'teamDomain', token: 'token', tokenCredentialId: 'tokenCredentialId', channel: '#channel', color: 'good', iconEmoji: ':+1:', username: 'username', timestamp: '124124.12412');", true));
         WorkflowRun run = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0).get());
         //everything should come from step configuration
-        jenkinsRule.assertLogContains(Messages.SlackSendStepConfig(false, false, false, false), run);
+        jenkinsRule.assertLogContains(Messages.slackSendStepValues("baseUrl/", "teamDomain", "#channel", "good", false, "tokenCredentialId", false, ":+1:", "username", "124124.12412"), run);
     }
 
     @Test
     public void test_fail_on_error() throws Exception {
         WorkflowJob job = jenkinsRule.jenkins.createProject(WorkflowJob.class, "workflow");
         //just define message
-        job.setDefinition(new CpsFlowDefinition("slackSend(message: 'message', teamDomain: 'teamDomain', token: 'token', tokenCredentialId: 'tokenCredentialId', channel: '#channel', color: 'good', failOnError: true);", true));
+        job.setDefinition(new CpsFlowDefinition("slackSend(message: 'message', baseUrl: 'baseUrl', teamDomain: 'teamDomain', token: 'token', tokenCredentialId: 'tokenCredentialId', channel: '#channel', color: 'good', failOnError: true);", true));
         WorkflowRun run = jenkinsRule.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0).get());
         //everything should come from step configuration
-        jenkinsRule.assertLogContains(Messages.NotificationFailed(), run);
+        jenkinsRule.assertLogContains(Messages.notificationFailed(), run);
     }
 }

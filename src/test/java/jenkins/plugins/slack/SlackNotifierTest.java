@@ -1,17 +1,16 @@
 package jenkins.plugins.slack;
 
-import hudson.model.Descriptor;
 import hudson.util.FormValidation;
+import java.util.Arrays;
+import java.util.Collection;
 import junit.framework.TestCase;
+import net.sf.json.JSONArray;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 @RunWith(Parameterized.class)
 public class SlackNotifierTest extends TestCase {
@@ -37,7 +36,7 @@ public class SlackNotifierTest extends TestCase {
     }
 
     @Parameterized.Parameters
-    public static Collection businessTypeKeys() {
+    public static Collection<Object[]> businessTypeKeys() {
         return Arrays.asList(new Object[][]{
                 {new SlackServiceStub(), true, FormValidation.Kind.OK},
                 {new SlackServiceStub(), false, FormValidation.Kind.ERROR},
@@ -51,13 +50,9 @@ public class SlackNotifierTest extends TestCase {
             slackServiceStub.setResponse(response);
         }
         descriptor.setSlackService(slackServiceStub);
-        try {
-            FormValidation result = descriptor.doTestConnection("teamDomain", "authToken", "authTokenCredentialId", "room");
-            assertEquals(result.kind, expectedResult);
-        } catch (Descriptor.FormException e) {
-            e.printStackTrace();
-            assertTrue(false);
-        }
+        FormValidation result = descriptor
+                .doTestConnection("baseUrl", "teamDomain", "authTokenCredentialId", false, "room", false, ":+1:", "slack", null);
+        assertEquals(result.kind, expectedResult);
     }
 
     public static class SlackServiceStub implements SlackService {
@@ -68,12 +63,41 @@ public class SlackNotifierTest extends TestCase {
             return response;
         }
 
+        @Override
+        public boolean publish(SlackRequest slackRequest) {
+            return response;
+        }
+
         public boolean publish(String message, String color) {
+            return response;
+        }
+
+        @Override
+        public boolean publish(String message, String color, String timestamp) {
+            return response;
+        }
+
+        @Override
+        public boolean publish(String message, JSONArray attachments, String color) {
+            return response;
+        }
+
+        @Override
+        public boolean publish(String message, JSONArray attachments, String color, String timestamp) {
+            return response;
+        }
+
+        @Override
+        public boolean addReaction(String channelId, String timestamp, String emojiName) {
             return response;
         }
 
         public void setResponse(boolean response) {
             this.response = response;
+        }
+
+        public String getResponseString() {
+            return null;
         }
     }
 }
